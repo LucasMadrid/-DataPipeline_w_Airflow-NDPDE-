@@ -9,30 +9,37 @@ class DataQualityOperator(BaseOperator):
     @apply_defaults
     def __init__(self,
                  redshift_conn_id='',
-                 tables=[],
+                 dq_checks=[],
                  *args, **kwargs):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
         self.redshift_conn_id = redshift_conn_id
-        self.tables=tables
+        self.dq_checks=dq_checks
 
     def execute(self, context):
         self.log.info('DataQualityOperator executed')
-
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        failed_checks = 0
+        failed_queries = []
         
         self.log.info('....Starting Data Quality Check....')
-        for table in self.tables:
+        for dq_check in self.dq_checks:
             
-            query_formatted = f"SELECT COUNT(1) FROM {table}"
-            records = redshift.get_records(query_formatted)
-
-            if records is None or len(records[0]) < 1:
-                raise ValueError(f"""
-                    Data quality check failed at {table}. The table is not created or it has {len(records)} rows
-                """)
-        
-            else:
-                self.log.info(f"Data quality check on {table} passed. {len(records)} rows")
-
-        self.log.info("All Data quality checks passed.")
+            sql_query = dq_check.get('check_sql')
+            expected_result = dq_check.get('expected_result')
+            
+            records = redshift.get_records(sql_query)[0]
+            
+            if records[0] != expected_result:
+                failed_checks+=1
+                failed_queries.append(sql_query)
+                
+                
+        if failed_checks > 0:
+            self.log.info(f"{failed_checks} data quality checks failed.")
+            self.log.info(failed_queries)
+            raise ValueError('Data Quality Check failed.')
+            
+            
+        self.log.info('Data Quality checks passed!')
+            
