@@ -52,12 +52,12 @@ class StageToRedshiftOperator(BaseOperator):
         
         
     def execute(self, context):
-        self.log.info('StageToRedshiftOperator WIP')
+        self.log.info(f'StageToRedshiftOperator for {self.table}')
         aws_hook = AwsHook(self.aws_credentials_id)
         credentials = aws_hook.get_credentials()
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         
-        self.log.info(f"Create staging_{self.table}_table")
+        self.log.info(f"Create {self.table} if it's not already created")
         
         # Run SQL CREATE statement for EVENTS and SONGS only if they not exists.
 
@@ -108,6 +108,7 @@ class StageToRedshiftOperator(BaseOperator):
         rendered_key = self.s3_key.format(**context)
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
         
+        self.log.info(f'Copying data from{s3_path} to {self.table}...')
         copy_sql_formatted = StageToRedshiftOperator.copy_sql.format(
             table_destination = self.table,
             s3_bucket = s3_path,

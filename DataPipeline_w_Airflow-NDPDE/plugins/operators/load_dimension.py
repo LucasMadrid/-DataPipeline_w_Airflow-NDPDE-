@@ -38,12 +38,12 @@ class LoadDimensionOperator(BaseOperator):
         self.truncate_opt=truncate_opt
 
     def execute(self, context):
-        self.log.info('LoadDimensionOperator WIP')
+        self.log.info(f'LoadDimensionOperator executed for {self.target_table}')
 
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         
         
-        
+        self.log.info(f'Running create table statements if they are not already created.')
         redshift.run("""
             CREATE TABLE IF NOT EXISTS public.artists (
                 artistid varchar(256) NOT NULL,
@@ -82,7 +82,6 @@ class LoadDimensionOperator(BaseOperator):
                 CONSTRAINT users_pkey PRIMARY KEY (userid)
             );
         """)
-
 
 
 

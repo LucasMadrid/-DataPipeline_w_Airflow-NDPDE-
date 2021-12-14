@@ -12,12 +12,10 @@ from helpers import SqlQueries
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,
-    'retries': 1,
+    'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'email_on_retry': False,
-    'start_date': datetime(2018, 11, 1),
-    'catchup': False,
-    'end_date': datetime(2018,11,2)
+    'start_date': datetime(2018, 11, 1)
 }
 
 dag = DAG(
@@ -25,7 +23,8 @@ dag = DAG(
      default_args=default_args,
      description='Load and transform data in Redshift with Airflow',
      #schedule_interval='0 * * * *'
-     schedule_interval='@monthly'
+     schedule_interval='@monthly',
+     catchup= False
 )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)

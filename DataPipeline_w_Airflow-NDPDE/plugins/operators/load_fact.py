@@ -37,12 +37,13 @@ class LoadFactOperator(BaseOperator):
         self.append_only = append_only
 
     def execute(self, context):
-        self.log.info('LoadFactOperator WIP')
+        self.log.info(f'LoadFactOperator for {self.target_table}')
 
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         
+        self.log.info(f'Running create table statement if it is not already created.')
         redshift.run("""
-            CREATE TABLE public.songplays (
+            CREATE TABLE IF NOT EXISTS public.songplays (
                 playid varchar(32) NOT NULL,
                 start_time timestamp NOT NULL,
                 userid int4 NOT NULL,
